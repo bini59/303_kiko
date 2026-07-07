@@ -56,7 +56,7 @@ export function ScriptPanel({
                   : "hover:bg-chip text-muted"
               }`}
             >
-              <span className="text-xs text-faint mr-2 font-body">
+              <span className="text-xs text-muted mr-2 font-body">
                 {formatTime(entry.start)}
               </span>
               {entry.text}
