@@ -29,9 +29,6 @@ yarn-error.log*
 .env*.local
 .env.production
 
-# deployment
-nginx/upstream.conf
-
 # vercel
 .vercel
 
@@ -43,3 +40,7 @@ next-env.d.ts
 /test-results/
 /playwright-report/
 .idea/
+
+# claude tooling (local artifacts)
+graphify-out/
+tmp/
