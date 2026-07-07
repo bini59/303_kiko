@@ -43,3 +43,7 @@ next-env.d.ts
 /test-results/
 /playwright-report/
 .idea/
+
+# claude tooling (local artifacts)
+graphify-out/
+tmp/
