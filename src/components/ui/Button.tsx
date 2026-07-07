@@ -4,25 +4,21 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary";
 }
 
-const WOBBLY_RADIUS = "255px 15px 225px 15px / 15px 225px 15px 255px";
-
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ variant = "primary", className = "", children, ...props }, ref) => {
     const base =
-      "font-body text-lg px-6 py-3 border-[3px] border-foreground transition-all duration-100 cursor-pointer";
+      "font-semibold text-[15px] px-6 py-3 rounded-2xl transition-colors duration-100 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 disabled:opacity-50 disabled:cursor-not-allowed";
 
     const variants = {
-      primary:
-        "bg-white text-foreground shadow-hard hover:bg-accent hover:text-white hover:shadow-hard-sm hover:translate-x-[2px] hover:translate-y-[2px] active:shadow-none active:translate-x-[4px] active:translate-y-[4px]",
+      primary: "bg-foreground text-white hover:bg-accent",
       secondary:
-        "bg-muted text-foreground shadow-hard hover:bg-secondary hover:text-white hover:shadow-hard-sm hover:translate-x-[2px] hover:translate-y-[2px] active:shadow-none active:translate-x-[4px] active:translate-y-[4px]",
+        "bg-card text-foreground border border-line hover:bg-chip",
     };
 
     return (
       <button
         ref={ref}
         className={`${base} ${variants[variant]} ${className}`}
-        style={{ borderRadius: WOBBLY_RADIUS }}
         {...props}
       >
         {children}

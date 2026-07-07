@@ -61,13 +61,13 @@ export function VerifyPanel({ selectedText, apiKey }: VerifyPanelProps) {
   };
 
   return (
-    <Card decoration="tape">
-      <h3 className="font-heading text-lg text-foreground mb-3">번역 검증</h3>
+    <Card>
+      <h3 className="font-extrabold -tracking-[0.01em] text-lg text-foreground mb-3">번역 검증</h3>
 
       {selectedText ? (
         <>
-          <div className="mb-3 p-3 bg-muted/30 rounded-lg">
-            <p className="font-body text-sm text-foreground/60">선택된 문장</p>
+          <div className="mb-3 p-3 bg-chip rounded-lg">
+            <p className="font-body text-sm text-muted">선택된 문장</p>
             <p className="font-body text-base text-foreground">{selectedText}</p>
           </div>
 
@@ -97,11 +97,11 @@ export function VerifyPanel({ selectedText, apiKey }: VerifyPanelProps) {
                 </span>
               </div>
               {!result.isCorrect && (
-                <div className="p-3 bg-secondary/5 rounded-lg">
-                  <p className="font-body text-sm text-foreground/60">
+                <div className="p-3 bg-accent/5 rounded-lg">
+                  <p className="font-body text-sm text-muted">
                     추천 번역
                   </p>
-                  <p className="font-body text-base text-secondary">
+                  <p className="font-body text-base text-accent">
                     {result.correctedTranslation}
                   </p>
                 </div>

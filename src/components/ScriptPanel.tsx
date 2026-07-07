@@ -33,8 +33,8 @@ export function ScriptPanel({
   };
 
   return (
-    <Card decoration="tack" className="h-[500px] overflow-y-auto">
-      <h3 className="font-heading text-lg text-foreground mb-3 sticky top-0 bg-white py-2">
+    <Card className="h-[500px] overflow-y-auto">
+      <h3 className="font-extrabold -tracking-[0.01em] text-lg text-foreground mb-3 sticky top-0 bg-card py-2">
         스크립트
       </h3>
       {transcriptError && (
@@ -52,11 +52,11 @@ export function ScriptPanel({
               onClick={() => onClickEntry(entry.start)}
               className={`w-full text-left px-3 py-2 rounded-lg transition-colors font-body text-base cursor-pointer ${
                 isActive
-                  ? "bg-secondary/10 border-l-4 border-secondary text-foreground"
-                  : "hover:bg-muted/50 text-foreground/70"
+                  ? "bg-accent/10 border-l-2 border-accent text-accent"
+                  : "hover:bg-chip text-muted"
               }`}
             >
-              <span className="text-xs text-foreground/40 mr-2 font-body">
+              <span className="text-xs text-muted mr-2 font-body">
                 {formatTime(entry.start)}
               </span>
               {entry.text}

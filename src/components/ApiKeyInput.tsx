@@ -21,7 +21,7 @@ export function ApiKeyInput({ apiKey, onChange }: ApiKeyInputProps) {
           value={apiKey}
           onChange={(e) => onChange(e.target.value)}
           placeholder="sk-..."
-          className="w-full px-3 py-1.5 border-2 border-foreground/20 bg-white text-foreground text-sm rounded-lg outline-none focus:border-secondary focus:ring-1 focus:ring-secondary/20 transition-colors placeholder:text-foreground/30"
+          className="w-full px-3 py-1.5 border border-line bg-card text-foreground text-sm rounded-2xl outline-none focus:border-accent focus:ring-2 focus:ring-accent/40 transition-colors placeholder:text-faint"
         />
       </div>
       <button
