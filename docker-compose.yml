@@ -3,7 +3,7 @@ services:
     build: .
     container_name: kiko
     ports:
-      - "3010:3000"
+      - "30301:30301"
     env_file:
       - .env.production
     restart: unless-stopped

@@ -23,5 +23,5 @@ jobs:
       - name: Verify deployment
         run: |
           sleep 5
-          curl -sf http://localhost:3010/ > /dev/null
+          curl -sf http://localhost:30301/ > /dev/null
           echo "Deployment verified successfully"
