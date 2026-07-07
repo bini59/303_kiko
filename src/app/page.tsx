@@ -80,7 +80,7 @@ export default function Home() {
     <main className="min-h-screen py-8 px-4 md:px-6">
       <div className="max-w-5xl mx-auto space-y-6 md:space-y-8">
         <header className="text-center">
-          <h1 className="font-heading text-5xl md:text-6xl text-foreground rotate-[-1deg]">
+          <h1 className="font-heading text-5xl md:text-6xl text-foreground font-extrabold -tracking-[0.02em]">
             Kiko
           </h1>
           <p className="font-body text-lg text-foreground/60 mt-2">
