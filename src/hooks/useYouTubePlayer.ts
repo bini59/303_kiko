@@ -11,6 +11,7 @@ declare global {
 
 interface UseYouTubePlayerReturn {
   currentTime: number;
+  duration: number;
   isPlaying: boolean;
   playerRef: React.RefObject<HTMLDivElement | null>;
   seekTo: (time: number) => void;
@@ -20,6 +21,7 @@ interface UseYouTubePlayerReturn {
 
 export function useYouTubePlayer(videoId: string): UseYouTubePlayerReturn {
   const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const playerRef = useRef<HTMLDivElement | null>(null);
   const ytPlayerRef = useRef<YT.Player | null>(null);
@@ -27,6 +29,9 @@ export function useYouTubePlayer(videoId: string): UseYouTubePlayerReturn {
 
   useEffect(() => {
     if (!videoId || !playerRef.current) return;
+
+    setCurrentTime(0);
+    setDuration(0);
 
     const initPlayer = () => {
       if (!playerRef.current) return;
@@ -39,6 +44,9 @@ export function useYouTubePlayer(videoId: string): UseYouTubePlayerReturn {
           rel: 0,
         },
         events: {
+          onReady: () => {
+            setDuration(ytPlayerRef.current?.getDuration() ?? 0);
+          },
           onStateChange: (event: YT.OnStateChangeEvent) => {
             const playing = event.data === window.YT.PlayerState.PLAYING;
             setIsPlaying(playing);
@@ -91,5 +99,5 @@ export function useYouTubePlayer(videoId: string): UseYouTubePlayerReturn {
     ytPlayerRef.current?.pauseVideo();
   }, []);
 
-  return { currentTime, isPlaying, playerRef, seekTo, play, pause };
+  return { currentTime, duration, isPlaying, playerRef, seekTo, play, pause };
 }

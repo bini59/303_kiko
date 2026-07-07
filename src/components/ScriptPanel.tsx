@@ -33,7 +33,7 @@ export function ScriptPanel({
   };
 
   return (
-    <Card className="h-[500px] overflow-y-auto">
+    <Card className="h-full overflow-y-auto">
       <h3 className="font-extrabold -tracking-[0.01em] text-lg text-foreground mb-3 sticky top-0 bg-card py-2">
         스크립트
       </h3>
