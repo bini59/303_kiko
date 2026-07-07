@@ -7,3 +7,10 @@ services:
     env_file:
       - .env.production
     restart: unless-stopped
+    networks:
+      - api-net
+
+networks:
+  # cloudflared가 붙어있는 전용 네트워크. 터널이 http://kiko:30301 로 접근한다.
+  api-net:
+    external: true
