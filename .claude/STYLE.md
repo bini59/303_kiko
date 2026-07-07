@@ -33,176 +33,83 @@ Always aim to:
 <design-system>
 # Design Philosophy
 
-The Hand-Drawn design style celebrates authentic imperfection and human touch in a digital world. It rejects the clinical precision of modern UI design in favor of organic, playful irregularity that evokes sketches on paper, sticky notes on a wall, and napkin diagrams from a brainstorming session.
+깔끔하고 미니멀한 모바일-퍼스트 "앱 카드" 미학. Toss/iOS 스타일의 조용하고 프리미엄한 유틸리티앱 느낌을 지향한다. 그라디언트·장식·불규칙성을 배제하고, 밝은 뉴트럴 그레이 캔버스 위에 흰 카드가 hairline 보더와 거의 보이지 않는 그림자로 떠 있는 구조로 깊이를 만든다.
 
 **Core Principles:**
-- **No Straight Lines**: Every border, shape, and container uses irregular border-radius values to create wobbly, hand-drawn edges that reject geometric perfection
-- **Authentic Texture**: The design layer paper grain, dot patterns, and subtle background textures to simulate physical media (notebook paper, post-its, sketch pads)
-- **Playful Rotation**: Elements are deliberately tilted using small rotation transforms (-2deg to 2deg) to break rigid grid alignment and create casual energy
-- **Hard Offset Shadows**: Reject soft blur shadows entirely. Use solid, offset box-shadows (4px 4px 0px) to create a cut-paper, layered collage aesthetic
-- **Handwritten Typography**: Use exclusively handwritten or marker-style fonts (Kalam, Patrick Hand) that feel human and approachable, never corporate or sterile
-- **Scribbled Decoration**: Add visual flourishes like dashed lines, hand-drawn arrows, tape effects, thumbtacks, and irregular shapes to reinforce the sketched aesthetic
-- **Limited Color Palette**: Stick to pencil blacks, paper whites, correction marker red, and post-it yellow for bold but cohesive simplicity
-- **Intentional Messiness**: Embrace overlap, asymmetry, and visual "mistakes" that make the design feel spontaneous and creative rather than manufactured
+- **Quiet surfaces**: 뉴트럴 그레이 배경(`#f4f5f7`) 위 순백 카드. 깊이는 1px 라인과 극도로 은은한 그림자로만 표현한다
+- **Generous rounding**: 16~18px 큰 라운드를 전면 사용해 부드럽고 터치 친화적인 느낌을 준다
+- **Restrained accent**: 단일 파란 accent(`#3e5bff`)를 상호작용/선택/하이라이트에만 절제해서 쓴다
+- **Confident typography**: extrabold(800) 제목 + 음수 tracking으로 편집디자인 같은 단단한 인상. Pretendard 사용
+- **No flourish**: 그라디언트·회전·손그림 장식·페이퍼 텍스처 없음. 미니멀이 곧 정체성
 
 **Emotional Intent:**
-This style should feel approachable, creative, human-centered, and fun. It lowers barriers and invites interaction by appearing unfinished and work-in-progress, making users feel like collaborators rather than consumers. Perfect for creative tools, brainstorming platforms, educational content, or any product that wants to emphasize human creativity over corporate polish.
+조용하고 신뢰감 있으며 프리미엄한 인상. 정보 밀도가 높은 학습/유틸리티 제품에 적합하다.
 
 # Design Token System
 
-## Colors (Single Palette - Light Mode)
-- **Background**: `#fdfbf7` (Warm Paper)
-- **Foreground**: `#2d2d2d` (Soft Pencil Black - never pure black)
-- **Muted**: `#e5e0d8` (Old Paper / Erased Pencil)
-- **Accent**: `#ff4d4d` (Red Correction Marker)
-- **Border**: `#2d2d2d` (Pencil Lead)
-- **Secondary Accent**: `#2d5da1` (Blue Ballpoint Pen)
+## Colors (Light Mode) — `tailwind.config.ts` `theme.extend.colors`
+- **background**: `#f4f5f7` — 앱 캔버스 (뉴트럴 그레이)
+- **foreground**: `#17181c` — 기본 텍스트 (ink)
+- **card**: `#ffffff` — 카드/입력 surface
+- **muted**: `#6b7280` — 보조 본문 텍스트 (⚠️ surface 아님, 텍스트색)
+- **faint**: `#9aa0aa` — 메타/라벨 (가장 옅은 텍스트)
+- **line**: `#ecedf0` — 1px 보더
+- **chip**: `#f1f3f6` — 칩/뱃지 배경
+- **accent**: `#3e5bff` — 파란 accent (`accent/10`, `accent/40` 투명도 변형 자주 사용)
+
+> `secondary`, 손그림용 `hard*` shadow, `wobbly*` radius 토큰은 제거됨. `bg-muted`(과거 surface)는 더 이상 배경색이 아니다 → `bg-card`/`bg-chip`을 쓴다.
 
 ## Typography
-- **Headings**: `Kalam` (wght 700) - Looks like a thick felt-tip marker.
-- **Body**: `Patrick Hand` (wght 400) - Legible but distinctly handwritten.
-- **Scale**: Large and readable. Headings should vary in size dramatically to look like emphasized notes.
+- **Font**: Pretendard Variable (CDN `@import`, `globals.css`). stack: `"Pretendard Variable", Pretendard, -apple-system, ...`. `font-heading`/`font-body` 모두 동일 stack
+- **Weights**: 제목 `font-extrabold`(800), 라벨/칩/버튼 `font-semibold`~`font-bold`. regular는 드물게
+- **Tracking**: 제목 음수(`-tracking-[0.01em]`~`-tracking-[0.02em]`), uppercase 라벨은 양수(`tracking-[0.04em]`) + `uppercase`
+- **Line-height**: 제목 tight(1.15~1.28), 본문/노트 loose(1.5~1.65)
+- **Sizes**: 손튜닝 px. 페이지 타이틀 `text-[22px]`, 카드 타이틀 `text-[16.5px]`, 라벨/메타 11~12.5px
 
 ## Radius & Border
-- **Wobbly Borders**: CRITICAL. Do NOT use standard `rounded-*` classes alone.
-- **Technique**: Use inline `style={{ borderRadius: ... }}` with multiple values to create irregular organic ellipses.
-    - Example: `border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;`
-    - Store reusable radius values in config as `wobbly` and `wobblyMd`
-- **Border Width**: Thick and variable. `border-2` is the minimum. Use `border-[3px]` or `border-4` for emphasis.
-- **Style**: `border-solid` is default for most elements. Use `border-dashed` for secondary elements, dividers, and sketchy overlays.
+- **Radius**: 큰 라운드. 카드 `rounded-[18px]`, 버튼/입력 `rounded-2xl`(16px), 칩 `rounded-lg`(8px), pill `rounded-full`. arbitrary 값 직접 사용 (config 토큰 없음)
+- **Border**: 1px `border-line` 기본. 표준 `border` width(1px) 사용, 두껍게 쓰지 않는다
 
 ## Shadows/Effects
-- **Hard Offset Shadows**: No blur. Just a solid offset to create a cut-paper, layered collage aesthetic.
-    - Standard: `box-shadow: 4px 4px 0px 0px #2d2d2d;`
-    - Emphasized: `box-shadow: 8px 8px 0px 0px #2d2d2d;`
-    - Hover State: Reduce offset `2px 2px` or `6px 6px` to create "lifting" effect
-- **Paper Texture**: Use `radial-gradient` dot pattern on body background to simulate notebook paper grain
-    - `backgroundImage: radial-gradient(#e5e0d8 1px, transparent 1px)`
-    - `backgroundSize: 24px 24px`
-- **Subtle Animations**: Gentle bounce (3s duration) for decorative elements, rotation on hover for playful interaction
+- **Card shadow**: `shadow-card` = `0 1px 2px 0 rgba(20,22,30,0.04)`. 매우 은은한 단일 그림자
+- **Highlight/Focus**: 그림자 대신 **ring** — `ring-[1.6px] ring-accent/40` (하이라이트), 입력 포커스 `focus:ring-2 focus:ring-accent/40 focus:border-accent`
+- **No blur-offset shadows, no paper texture, no dot grid**
 
 # Component Stylings
 
-## Buttons
-- **Shape**: Irregular wobbly oval using custom border-radius from config
-- **Normal State**:
-    - White background, `border-[3px]` black border, black text
-    - Hard offset shadow: `shadow-[4px_4px_0px_0px_#2d2d2d]`
-    - Font: Patrick Hand (body font)
-- **Hover State**:
-    - Background fills with Accent red `#ff4d4d`, text turns white
-    - Shadow reduces to `shadow-[2px_2px_0px_0px_#2d2d2d]`
-    - Subtle translate: `translate-x-[2px] translate-y-[2px]`
-- **Active State**:
-    - Shadow disappears completely (button "presses flat")
-    - Translate increases: `translate-x-[4px] translate-y-[4px]`
-- **Secondary Variant**: Uses muted background `#e5e0d8`, hovers to blue `#2d5da1`
+## Buttons (`src/components/ui/Button.tsx`)
+- **Shape**: `rounded-2xl`, `font-semibold text-[15px]`, `px-6 py-3`. 그림자·보더 없음(primary)
+- **primary**: `bg-foreground text-white` → hover `bg-accent` (dark ink → 파란 accent)
+- **secondary**: `bg-card text-foreground border border-line` → hover `bg-chip`
+- **transition**: `transition-colors duration-100`, `disabled:opacity-50`
 
-## Cards/Containers
-- **Base Style**: White background (`#ffffff`) with wobbly black border (`border-2`)
-- **Border Radius**: Use `wobblyMd` radius from config for medium containers
-- **Shadow**: Subtle `3px 3px 0px 0px rgba(45, 45, 45, 0.1)` for depth
-- **Decoration Options**:
-    - `decoration="tape"`: Translucent gray bar positioned at top center with slight rotation
-    - `decoration="tack"`: Red circular thumbtack at top center
-    - No decoration for minimal aesthetic
-- **Special Treatments**:
-    - Post-it yellow background `#fff9c4` for feature cards
-    - Speech bubble style for testimonials with geometric tail using border-based triangle
-    - Sticky-note tags for section labels
+## Cards (`src/components/ui/Card.tsx`)
+- **Base**: `bg-card border border-line rounded-[18px] shadow-card p-6`
+- `decoration` prop은 호환용으로 남아있으나 무시된다(손그림 tape/tack 제거됨). 신규 코드에서 쓰지 말 것
+- 하이라이트가 필요하면 `ring-[1.6px] ring-accent/40`
 
-## Inputs
-- **Style**: Full box with wobbly borders (not just underline)
-- **Border**: `border-2` with wobbly radius matching button aesthetic
-- **Font**: Patrick Hand (body font) for authentic hand-written feel
-- **Background**: White with placeholder text in muted color `#2d2d2d/40`
-- **Focus State**:
-    - Border changes to blue `#2d5da1`
-    - Ring effect: `ring-2 ring-[#2d5da1]/20`
-    - No standard outline, maintains wobbly aesthetic
+## Inputs (`src/components/ui/Input.tsx`)
+- **Style**: `rounded-2xl border border-line bg-card`, `text-[15px]`, `placeholder:text-faint`
+- **Focus**: `focus:border-accent focus:ring-2 focus:ring-accent/40`
+- **Error**: `border-accent`, 에러 텍스트 `text-accent`
+
+## Chips / Pills (선택 상태 패턴)
+- 미선택: `bg-chip text-muted`
+- 선택(status): `bg-foreground text-white`
+- 선택(genre/tag): `bg-accent/10 text-accent border border-accent/30`
 
 # Layout Strategy
-- **Grid System**: Use Tailwind's responsive grid (`md:grid-cols-2`, `md:grid-cols-3`) but add visual irregularity
-- **Rotation**: Apply small rotations (`rotate-1`, `-rotate-2`) to cards, images, and decorative elements
-- **Breaking Alignment**:
-    - Stats: Organic shapes with varied border-radius instead of perfect circles
-    - Cards: Slight rotation on hover (`hover:rotate-1` or `hover:-rotate-1`)
-    - Pricing: Scale up highlighted card slightly on desktop (`md:scale-105`)
-- **Overlap & Layering**:
-    - Overlapping avatar circles with negative margin (`-space-x-4`)
-    - Decorative elements positioned absolutely outside parent bounds
-    - Speech bubble tails extending beyond card borders
-- **Whitespace**:
-    - Consistent section padding (`py-20`) for rhythm
-    - Generous gap in grids (`gap-8`) to prevent crowding
-    - Max-width containers (`max-w-5xl`, `max-w-3xl`) for focused content
-- **Z-Index Layering**: Decorative SVG backgrounds at low z-index, step numbers elevated with `z-10`
+- **Container**: 모바일-퍼스트. 콘텐츠 폭은 제한(`max-w-*`) + `mx-auto`. seoko는 `max-w-[520px]` 단일 컬럼이나 kiko는 콘텐츠에 맞게 조정
+- **Spacing**: gap `gap-2`~`gap-3`, 카드 패딩 `p-4`~`p-6`, 페이지 좌우 `px-5`
+- **Sticky header**: `sticky top-0 z-10 bg-background`
+- **Fixed heights**: 칩 `h-7`/`h-8`, 검색바 `h-12`, CTA `h-[54px]` 등 컨트롤은 고정 높이
+- 회전·overlap·negative-margin 레이어링 없음 (미니멀 유지)
 
-# Non-Genericness (Bold Choices)
-
-**Unique Visual Signatures:**
-- **NO STRAIGHT LINES**: Every container, button, card, and frame uses irregular border-radius values—never standard Tailwind rounded classes
-- **Hand-Drawn SVG Decorations**:
-    - Arrow pointing to hero CTA with dashed path
-    - Squiggly connecting line between "How It Works" steps
-    - Corner frame marks on hero image placeholder
-- **Authentic Paper Effects**:
-    - Tape strips (translucent gray rectangles) on feature cards
-    - Thumbtack pins (colored circles) for card decoration
-    - Dashed circle overlay highlighting popular pricing tier
-    - Speech bubble geometric tails on testimonials
-- **Playful Typography Treatments**:
-    - Rotating exclamation mark in hero headline
-    - Wavy underline decoration on navigation links and footer headers
-    - Drop-cap first letter treatment in Product Detail section
-    - Post-it yellow sticky-note tag on Product Detail card
-- **Scribbled Accents**:
-    - Bouncing decorative circle near hero image (desktop only)
-    - Dashed borders on secondary elements and dividers
-    - Emoji sketches in blog post placeholders
-    - Line-through hover effect on footer links
-- **Interactive Personality**:
-    - Buttons "press flat" by eliminating shadow on active state
-    - Cards rotate slightly on hover
-    - Blog cards increase shadow offset on hover for "lift" effect
-    - Grayscale-to-color transition on blog images (removed in final implementation for simplicity)
-
-# Effects & Animation
-- **Hover**: "Jiggle" effect. `hover:rotate-1` or `hover:-rotate-2`.
-- **Transition**: `transition-transform duration-100` (Fast and snappy).
-
-# Spacing, Layout & Iconography
-- **Max Width**: `max-w-5xl` (Keep it contained like a sketchbook).
-- **Icons**: `lucide-react` icons with `stroke-width={2.5}` or `3`.
-- **Icon Style**: Enclose key icons in rough circles.
+# Iconography
+- `lucide-react` 아이콘, 기본 stroke-width. 러프 서클 없이 깔끔하게
 
 # Responsive Strategy
-
-**Mobile-First Approach:**
-- **Typography Scaling**:
-    - Headings: `text-4xl md:text-5xl` or `text-5xl md:text-6xl`
-    - Body text: `text-lg md:text-xl` or `text-base md:text-xl`
-    - Buttons: `text-lg md:text-2xl`
-- **Layout Stacking**:
-    - All grids collapse to single column on mobile, expand to 2-3 columns on `md:` breakpoint
-    - Hero switches from 2-column to stacked with `md:grid-cols-2`
-    - Stats: 2-column grid on mobile (`grid-cols-2`), 4-column on desktop (`md:grid-cols-4`)
-- **Hide Decorative Elements**:
-    - Hand-drawn arrow near CTA: `hidden md:block`
-    - Bouncing decorative circle: `hidden md:block`
-    - Squiggly connecting line in "How It Works": `hidden md:block`
-    - Dashed circle on pricing card: `hidden md:block`
-- **Maintain Core Aesthetic**:
-    - Keep wobbly borders and handwritten fonts on all screen sizes
-    - Reduce rotation slightly if needed (`-rotate-1` instead of `-rotate-2`)
-    - Maintain hard offset shadows (never add blur)
-    - Preserve playful personality and irregular shapes
-- **Touch-Friendly Targets**:
-    - Buttons use minimum `h-12` (48px) for accessibility
-    - Adequate spacing between interactive elements with `gap-8`
-- **Spacing Adjustments**:
-    - Section padding remains `py-20` for vertical rhythm
-    - Reduce horizontal padding when needed: `px-6`
-    - Stats scale down: `h-24 w-24 md:h-32 md:w-32`
-    - Pricing cards: `p-6 md:p-8` for better mobile fit
-      </design-system>
+- **Mobile-first**, 단일 컬럼 기본. 넓은 화면에서 폭만 확장
+- 터치 타겟 최소 `h-12`(48px)
+- 그림자/라운드/Pretendard 미학을 전 사이즈 유지 (숨길 장식 요소 없음)
+</design-system>

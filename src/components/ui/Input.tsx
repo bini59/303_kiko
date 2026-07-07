@@ -4,24 +4,20 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   error?: string;
 }
 
-const WOBBLY_RADIUS = "255px 15px 225px 15px / 15px 225px 15px 255px";
-
 const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ error, className = "", ...props }, ref) => {
-    const borderColor = error ? "border-accent" : "border-foreground";
-    const focusBorder = "focus:border-secondary focus:ring-2 focus:ring-secondary/20";
+    const borderColor = error ? "border-accent" : "border-line";
+    const focusBorder =
+      "focus:border-accent focus:ring-2 focus:ring-accent/40";
 
     return (
       <div className="w-full">
         <input
           ref={ref}
-          className={`w-full font-body text-lg px-4 py-3 border-2 ${borderColor} bg-white text-foreground placeholder:text-foreground/40 outline-none ${focusBorder} transition-colors ${className}`}
-          style={{ borderRadius: WOBBLY_RADIUS }}
+          className={`w-full text-[15px] px-4 py-3 rounded-2xl border ${borderColor} bg-card text-foreground placeholder:text-faint outline-none ${focusBorder} transition-colors ${className}`}
           {...props}
         />
-        {error && (
-          <p className="mt-1 font-body text-sm text-accent">{error}</p>
-        )}
+        {error && <p className="mt-1 text-sm text-accent">{error}</p>}
       </div>
     );
   }

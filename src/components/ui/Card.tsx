@@ -1,29 +1,19 @@
 import { HTMLAttributes, forwardRef } from "react";
 
 interface CardProps extends HTMLAttributes<HTMLDivElement> {
+  // ponytail: 손그림 tape/tack 장식은 미니멀 디자인에서 제거됨. prop은 호출부 호환을 위해 남기되 무시한다.
   decoration?: "tape" | "tack" | "none";
 }
 
-const WOBBLY_MD_RADIUS = "15px 225px 15px 255px / 255px 15px 225px 15px";
-
 const Card = forwardRef<HTMLDivElement, CardProps>(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   ({ decoration = "none", className = "", children, ...props }, ref) => {
     return (
       <div
         ref={ref}
-        className={`relative bg-white border-2 border-foreground shadow-[3px_3px_0px_0px_rgba(45,45,45,0.1)] p-6 ${className}`}
-        style={{ borderRadius: WOBBLY_MD_RADIUS }}
+        className={`bg-card border border-line rounded-[18px] shadow-card p-6 ${className}`}
         {...props}
       >
-        {decoration === "tape" && (
-          <div
-            className="absolute -top-3 left-1/2 -translate-x-1/2 w-16 h-6 bg-foreground/10 rotate-1"
-            style={{ borderRadius: "2px" }}
-          />
-        )}
-        {decoration === "tack" && (
-          <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-accent border-2 border-foreground" />
-        )}
         {children}
       </div>
     );
