@@ -1,17 +1,9 @@
 services:
-  nginx:
-    image: nginx:alpine
-    container_name: kiko-nginx
+  kiko:
+    build: .
+    container_name: kiko
     ports:
-      - "3010:80"
-    volumes:
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./nginx/upstream.conf:/etc/nginx/conf.d/upstream.conf:ro
-    networks:
-      - kiko-network
+      - "3010:3000"
+    env_file:
+      - .env.production
     restart: unless-stopped
-
-networks:
-  kiko-network:
-    name: kiko-network
-    external: true

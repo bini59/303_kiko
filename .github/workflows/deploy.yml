@@ -17,11 +17,11 @@ jobs:
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
         run: echo "YOUTUBE_API_KEY=${YOUTUBE_API_KEY}" > .env.production
 
-      - name: Deploy (blue-green)
-        run: bash scripts/deploy.sh
+      - name: Deploy
+        run: docker compose up -d --build
 
       - name: Verify deployment
         run: |
-          sleep 3
+          sleep 5
           curl -sf http://localhost:3010/ > /dev/null
           echo "Deployment verified successfully"
