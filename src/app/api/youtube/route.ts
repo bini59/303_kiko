@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { fetchVideoInfo } from "@/lib/youtube/client";
-import { fetchTranscript } from "@/lib/youtube/transcript";
+import { getTranscript } from "@/lib/youtube/transcriptCache";
 
 export async function GET(request: NextRequest) {
   const videoId = request.nextUrl.searchParams.get("videoId");
@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
   try {
     const [infoResult, transcriptResult] = await Promise.allSettled([
       fetchVideoInfo(videoId),
-      fetchTranscript(videoId),
+      getTranscript(videoId),
     ]);
 
     if (infoResult.status === "rejected") {
