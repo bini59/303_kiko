@@ -23,8 +23,14 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # yt-dlp standalone 바이너리 (Python 불필요, Innertube 변경을 따라가 안 깨짐)
+# 아키텍처별 릴리즈 자산을 선택 (러너는 aarch64)
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl \
-    && curl -fL https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux \
+    && case "$(uname -m)" in \
+         aarch64) YTDLP_ASSET=yt-dlp_linux_aarch64 ;; \
+         x86_64)  YTDLP_ASSET=yt-dlp_linux ;; \
+         *) echo "unsupported arch: $(uname -m)" && exit 1 ;; \
+       esac \
+    && curl -fL "https://github.com/yt-dlp/yt-dlp/releases/latest/download/${YTDLP_ASSET}" \
        -o /usr/local/bin/yt-dlp \
     && chmod a+rx /usr/local/bin/yt-dlp \
     && rm -rf /var/lib/apt/lists/*
