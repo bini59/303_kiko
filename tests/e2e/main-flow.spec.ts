@@ -97,7 +97,7 @@ test.describe('Main Flow', () => {
 
     // Video player section should still appear
     await expect(page.getByRole('heading', { name: '스크립트' })).toBeVisible({ timeout: 10000 })
-    // Transcript error notice should be shown
-    await expect(page.getByText('자막을 불러올 수 없습니다')).toBeVisible()
+    // Transcript error notice should surface the actual error message
+    await expect(page.getByRole('status')).toContainText('자막 추출 실패: YouTube IP blocked')
   })
 })
