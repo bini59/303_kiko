@@ -43,12 +43,18 @@ export async function fetchTranscript(
     const args = [
       "--write-auto-subs",
       "--write-subs",
+      // 원본 언어 트랙만. `${lang}.*` 와일드카드는 자동번역 트랙(ja-zh 등)까지
+      // 긁어 불필요한 요청이 늘고 YouTube 429(rate limit)를 앞당긴다.
       "--sub-langs",
-      `${lang}.*,${lang}`,
+      `${lang},${lang}-orig`,
       "--sub-format",
       "json3",
       "--skip-download",
       "--no-playlist",
+      "--retries",
+      "5",
+      "--extractor-retries",
+      "3",
       "-o",
       join(dir, "%(id)s.%(ext)s"),
     ];
