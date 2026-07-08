@@ -1,5 +1,5 @@
 # Stage 1: Base
-FROM node:20-slim AS base
+FROM node:24-slim AS base
 RUN corepack enable && corepack prepare pnpm@10.7.1 --activate
 
 # Stage 2: Dependencies
@@ -16,7 +16,7 @@ COPY . .
 RUN pnpm build
 
 # Stage 4: Runner
-FROM node:20-slim AS runner
+FROM node:24-slim AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
@@ -40,6 +40,10 @@ RUN addgroup --system --gid 1001 nodejs && \
 
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+# transcript 캐시 DB 디렉토리 (compose에서 named volume 마운트)
+RUN mkdir -p /app/data && chown nextjs:nodejs /app/data
+ENV TRANSCRIPT_DB_PATH=/app/data/transcript-cache.db
 
 USER nextjs
 

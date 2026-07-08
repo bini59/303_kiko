@@ -44,3 +44,6 @@ next-env.d.ts
 # claude tooling (local artifacts)
 graphify-out/
 tmp/
+
+# transcript cache DB (local dev)
+/data/

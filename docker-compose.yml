@@ -32,11 +32,17 @@ services:
       - .env.production
     environment:
       YTDLP_PROXY: "http://kiko-gluetun:8888"
+    volumes:
+      # transcript 캐시 DB 영속화 (컨테이너 재생성에도 유지)
+      - kiko-data:/app/data
     depends_on:
       - gluetun
     restart: unless-stopped
     networks:
       - api-net
+
+volumes:
+  kiko-data:
 
 networks:
   # cloudflared가 붙어있는 전용 네트워크. 터널이 http://kiko:30301 로 접근한다.
