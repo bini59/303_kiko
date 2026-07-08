@@ -27,6 +27,7 @@
 ## 아키텍처
 - LLM: 전략 패턴 (`LLMProvider` 인터페이스 → OpenAI 구현체)
 - YouTube: Data API v3 + 자막 추출
+- 자막 캐시: SQLite(`node:sqlite`, Node 24) — 캐시 우선 조회, miss일 때만 yt-dlp fetch (#24)
 - 자막 동기화: YouTube IFrame API onStateChange + 타임스탬프 매칭
 
 ## 작업 플로우
@@ -54,7 +55,7 @@
 - [x] Phase 6: 통합 & E2E
 
 ## 테스트 현황
-- 단위/통합 테스트: 11개 파일, 59 테스트
+- 단위/통합 테스트: 13개 파일, 62 테스트
 - E2E 테스트: 1개 파일, 5 테스트
 - 전체 통과 (typecheck + build 포함)
 
