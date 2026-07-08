@@ -1,4 +1,28 @@
 services:
+  # Surfshark WireGuard VPN. yt-dlp 자막 요청만 이 VPN을 경유해 YouTube 봇 차단을 우회한다.
+  # 내장 HTTP 프록시(:8888)를 kiko가 YTDLP_PROXY로 사용.
+  gluetun:
+    image: qmcgaw/gluetun:latest
+    container_name: kiko-gluetun
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      VPN_SERVICE_PROVIDER: custom
+      VPN_TYPE: wireguard
+      WIREGUARD_ENDPOINT_IP: "146.70.205.117" # jp-tok.prod.surfshark.com
+      WIREGUARD_ENDPOINT_PORT: "51820"
+      WIREGUARD_PUBLIC_KEY: "YJSjrc/WWOjQUyUi4iYcHb7LsWWoCY+2fK8/8VtC/BY="
+      WIREGUARD_ADDRESSES: "10.14.0.2/16"
+      HTTPPROXY: "on"
+      # WIREGUARD_PRIVATE_KEY 는 .env.production(GitHub Secret)에서 주입
+    env_file:
+      - .env.production
+    restart: unless-stopped
+    networks:
+      - api-net
+
   kiko:
     build: .
     container_name: kiko
@@ -6,6 +30,10 @@ services:
       - "30301:30301"
     env_file:
       - .env.production
+    environment:
+      YTDLP_PROXY: "http://kiko-gluetun:8888"
+    depends_on:
+      - gluetun
     restart: unless-stopped
     networks:
       - api-net
