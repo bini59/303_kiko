@@ -15,7 +15,12 @@ jobs:
       - name: Create .env.production
         env:
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
-        run: echo "YOUTUBE_API_KEY=${YOUTUBE_API_KEY}" > .env.production
+          WIREGUARD_PRIVATE_KEY: ${{ secrets.WIREGUARD_PRIVATE_KEY }}
+        run: |
+          {
+            echo "YOUTUBE_API_KEY=${YOUTUBE_API_KEY}"
+            echo "WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}"
+          } > .env.production
 
       - name: Deploy
         run: docker compose up -d --build

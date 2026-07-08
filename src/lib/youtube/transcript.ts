@@ -9,36 +9,28 @@ const execFileAsync = promisify(execFile);
 
 // yt-dlp가 Innertube 변경을 따라가므로 직접 구현보다 안 깨진다.
 const YTDLP = process.env.YTDLP_PATH || "yt-dlp";
+// 설정 시 자막 요청만 이 프록시(gluetun VPN)를 경유한다. YouTube의 클라우드 IP 봇 차단 우회.
+const YTDLP_PROXY = process.env.YTDLP_PROXY;
 
-const SRT_TIME =
-  /(\d{2}):(\d{2}):(\d{2})[,.](\d{3})\s*-->\s*(\d{2}):(\d{2}):(\d{2})[,.](\d{3})/;
+interface Json3Event {
+  segs?: { utf8: string }[];
+  tStartMs: number;
+  dDurationMs?: number;
+}
 
-/** SRT 블록을 TranscriptEntry[]로 파싱한다. */
-export function parseSrt(srt: string): TranscriptEntry[] {
-  const entries: TranscriptEntry[] = [];
-
-  for (const block of srt.replace(/\r/g, "").trim().split(/\n\n+/)) {
-    const lines = block.split("\n");
-    const timeIdx = lines.findIndex((l) => l.includes("-->"));
-    if (timeIdx === -1) continue;
-
-    const m = lines[timeIdx].match(SRT_TIME);
-    if (!m) continue;
-
-    const start = +m[1] * 3600 + +m[2] * 60 + +m[3] + +m[4] / 1000;
-    const end = +m[5] * 3600 + +m[6] * 60 + +m[7] + +m[8] / 1000;
-
-    const text = lines
-      .slice(timeIdx + 1)
-      .join(" ")
-      .replace(/<[^>]+>/g, "") // vtt→srt 변환 시 남는 인라인 태그 제거
-      .trim();
-    if (!text) continue;
-
-    entries.push({ text, start, duration: Math.max(0, end - start) });
-  }
-
-  return entries;
+/**
+ * YouTube json3 자막을 TranscriptEntry[]로 파싱한다.
+ * 자동 자막의 롤업 이벤트는 seg가 개행("\n")뿐이라 trim 후 빈 문자열로 걸러진다.
+ */
+export function parseJson3(json: { events?: Json3Event[] }): TranscriptEntry[] {
+  return (json.events ?? [])
+    .filter((e) => e.segs && e.segs.length > 0)
+    .map((e) => ({
+      text: e.segs!.map((s) => s.utf8).join("").trim(),
+      start: e.tStartMs / 1000,
+      duration: (e.dDurationMs ?? 0) / 1000,
+    }))
+    .filter((e) => e.text.length > 0);
 }
 
 export async function fetchTranscript(
@@ -48,29 +40,36 @@ export async function fetchTranscript(
   const dir = await mkdtemp(join(tmpdir(), "kiko-sub-"));
 
   try {
-    await execFileAsync(
-      YTDLP,
-      [
-        "--write-auto-subs",
-        "--write-subs",
-        "--sub-langs",
-        `${lang}.*,${lang}`,
-        "--skip-download",
-        "--convert-subs",
-        "srt",
-        "--no-playlist",
-        "-o",
-        join(dir, "%(id)s.%(ext)s"),
-        "--",
-        `https://www.youtube.com/watch?v=${videoId}`,
-      ],
-      { timeout: 60_000, maxBuffer: 10 * 1024 * 1024 }
-    );
+    const args = [
+      "--write-auto-subs",
+      "--write-subs",
+      "--sub-langs",
+      `${lang}.*,${lang}`,
+      "--sub-format",
+      "json3",
+      "--skip-download",
+      "--no-playlist",
+      "-o",
+      join(dir, "%(id)s.%(ext)s"),
+    ];
+    if (YTDLP_PROXY) args.push("--proxy", YTDLP_PROXY);
+    args.push("--", `https://www.youtube.com/watch?v=${videoId}`);
 
-    const srtFile = (await readdir(dir)).find((f) => f.endsWith(".srt"));
-    if (!srtFile) throw new Error("이 영상에는 자막이 없습니다");
+    await execFileAsync(YTDLP, args, {
+      timeout: 60_000,
+      maxBuffer: 10 * 1024 * 1024,
+    });
 
-    const entries = parseSrt(await readFile(join(dir, srtFile), "utf-8"));
+    const files = await readdir(dir);
+    // 원본 언어 트랙(<lang>) 우선, 없으면 <lang>-orig 등, 없으면 아무 json3
+    const pick =
+      files.find((f) => f.endsWith(`.${lang}.json3`)) ??
+      files.find((f) => f.includes(`.${lang}`) && f.endsWith(".json3")) ??
+      files.find((f) => f.endsWith(".json3"));
+    if (!pick) throw new Error("이 영상에는 자막이 없습니다");
+
+    const json = JSON.parse(await readFile(join(dir, pick), "utf-8"));
+    const entries = parseJson3(json);
     if (entries.length === 0) throw new Error("이 영상에는 자막이 없습니다");
 
     return entries;
