@@ -169,4 +169,81 @@ describe("fetchTranscript", () => {
       "자막 트랙을 찾을 수 없습니다"
     );
   });
+
+  it("prefers manual ja track over ja asr track", async () => {
+    const playerJson = {
+      captions: {
+        playerCaptionsTracklistRenderer: {
+          captionTracks: [
+            { baseUrl: "https://example.com/asr", languageCode: "ja", kind: "asr" },
+            { baseUrl: "https://example.com/manual", languageCode: "ja" },
+          ],
+        },
+      },
+    };
+    const json3 = {
+      events: [{ tStartMs: 0, dDurationMs: 1000, segs: [{ utf8: "手動" }] }],
+    };
+
+    const fetchMock = mockFetchResponses(
+      { ok: true, json: playerJson },
+      { ok: true, json: json3 }
+    );
+
+    await fetchTranscript("testVideoId", "ja");
+
+    expect(fetchMock.mock.calls[1][0]).toContain("https://example.com/manual");
+  });
+
+  it("uses ja asr track when no manual ja track exists", async () => {
+    const playerJson = {
+      captions: {
+        playerCaptionsTracklistRenderer: {
+          captionTracks: [
+            { baseUrl: "https://example.com/en", languageCode: "en" },
+            { baseUrl: "https://example.com/asr", languageCode: "ja", kind: "asr" },
+          ],
+        },
+      },
+    };
+    const json3 = {
+      events: [{ tStartMs: 0, dDurationMs: 1000, segs: [{ utf8: "自動" }] }],
+    };
+
+    const fetchMock = mockFetchResponses(
+      { ok: true, json: playerJson },
+      { ok: true, json: json3 }
+    );
+
+    await fetchTranscript("testVideoId", "ja");
+
+    expect(fetchMock.mock.calls[1][0]).toContain("https://example.com/asr");
+  });
+
+  it("throws when transcript parses to zero entries", async () => {
+    const playerJson = {
+      captions: {
+        playerCaptionsTracklistRenderer: {
+          captionTracks: [
+            { baseUrl: "https://example.com/timedtext", languageCode: "ja" },
+          ],
+        },
+      },
+    };
+    const json3 = {
+      events: [
+        { tStartMs: 0, dDurationMs: 500, segs: [{ utf8: "  " }] },
+        { tStartMs: 500, dDurationMs: 500 },
+      ],
+    };
+
+    mockFetchResponses(
+      { ok: true, json: playerJson },
+      { ok: true, json: json3 }
+    );
+
+    await expect(fetchTranscript("testVideoId", "ja")).rejects.toThrow(
+      "이 영상에는 자막이 없습니다"
+    );
+  });
 });

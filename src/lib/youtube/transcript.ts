@@ -39,16 +39,18 @@ export async function fetchTranscript(
 
   const playerData = await playerRes.json();
 
-  const captionTracks: { baseUrl: string; languageCode: string }[] =
+  const captionTracks: { baseUrl: string; languageCode: string; kind?: string }[] =
     playerData?.captions?.playerCaptionsTracklistRenderer?.captionTracks ?? [];
 
   if (captionTracks.length === 0) {
     throw new Error("자막 트랙을 찾을 수 없습니다");
   }
 
-  // Find matching language track, fallback to first
+  // Prefer manual lang track > lang auto (asr) track > first track
   const track =
-    captionTracks.find((t) => t.languageCode === lang) ?? captionTracks[0];
+    captionTracks.find((t) => t.languageCode === lang && t.kind !== "asr") ??
+    captionTracks.find((t) => t.languageCode === lang) ??
+    captionTracks[0];
 
   // Step 2: Fetch transcript in json3 format
   const transcriptUrl = `${track.baseUrl}&fmt=json3`;
@@ -71,6 +73,10 @@ export async function fetchTranscript(
       duration: (e.dDurationMs ?? 0) / 1000,
     }))
     .filter((e) => e.text.length > 0);
+
+  if (entries.length === 0) {
+    throw new Error("이 영상에는 자막이 없습니다");
+  }
 
   return entries;
 }

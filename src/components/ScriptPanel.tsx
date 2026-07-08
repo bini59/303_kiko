@@ -37,13 +37,19 @@ export function ScriptPanel({
       <h3 className="font-extrabold -tracking-[0.01em] text-lg text-foreground mb-3 sticky top-0 bg-card py-2">
         스크립트
       </h3>
-      {transcriptError && (
-        <p className="font-body text-sm text-accent mb-3" role="alert">
-          자막을 불러올 수 없습니다
-        </p>
-      )}
-      <div className="space-y-1">
-        {transcript.map((entry, index) => {
+      {transcriptError ? (
+        <div
+          className="font-body text-muted text-center py-10 px-4"
+          role="alert"
+        >
+          <p className="text-accent font-bold mb-1">
+            이 영상은 자막이 없어 학습할 수 없어요
+          </p>
+          <p className="text-sm">자막 있는 영상을 골라주세요.</p>
+        </div>
+      ) : (
+        <div className="space-y-1">
+          {transcript.map((entry, index) => {
           const isActive = index === activeIndex;
           return (
             <button
@@ -62,8 +68,9 @@ export function ScriptPanel({
               {entry.text}
             </button>
           );
-        })}
-      </div>
+          })}
+        </div>
+      )}
     </Card>
   );
 }
