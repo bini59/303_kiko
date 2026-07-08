@@ -20,3 +20,10 @@ _Avoid_: Translation check, grading
 
 **LLM Provider**:
 Translation Verification를 수행하는 번역 검증 엔진의 추상 인터페이스. 구현체는 교체 가능하다(전략 패턴).
+
+**Transcript Cache** (자막 캐시):
+추출에 성공한 Transcript를 videoId 키로 SQLite에 저장하고, 요청 시 캐시 우선 조회 → miss일 때만 YouTube fetch. YouTube 429/차단 리스크를 구조적으로 줄인다.
+
+## Decisions
+
+- **2026-07-08 자막 캐시 저장소 = SQLite** (#24): 성공한 transcript만 캐싱(negative cache 없음), 대상은 transcript만(video info 제외), 무효화 정책 없음. Docker 배포 시 DB 파일은 volume 마운트로 영속화. 내장 `node:sqlite` 사용을 위해 런타임을 Node 24로 통일(로컬 + Dockerfile) — 파일 캐시 대안 검토 후에도 SQLite 유지 결정.
