@@ -15,24 +15,29 @@ function getDb(): DatabaseSync {
     mkdirSync(dirname(path), { recursive: true });
   }
 
-  db = new DatabaseSync(path);
-  db.exec(
+  // 테이블 생성까지 성공한 뒤에만 싱글턴에 공개 — 부분 초기화된 핸들 방지
+  const conn = new DatabaseSync(path);
+  conn.exec(
     `CREATE TABLE IF NOT EXISTS transcripts (
-      video_id TEXT PRIMARY KEY,
-      lang TEXT,
+      video_id TEXT NOT NULL,
+      lang TEXT NOT NULL,
       entries TEXT NOT NULL,
-      created_at INTEGER NOT NULL
+      created_at INTEGER NOT NULL,
+      PRIMARY KEY (video_id, lang)
     )`
   );
+  db = conn;
   return db;
 }
 
 // 캐시는 최적화일 뿐 — 읽기/쓰기 실패가 자막 파이프라인을 죽이면 안 된다.
-function readCache(videoId: string): TranscriptEntry[] | null {
+function readCache(videoId: string, lang: string): TranscriptEntry[] | null {
   try {
     const row = getDb()
-      .prepare("SELECT entries FROM transcripts WHERE video_id = ?")
-      .get(videoId) as { entries: string } | undefined;
+      .prepare(
+        "SELECT entries FROM transcripts WHERE video_id = ? AND lang = ?"
+      )
+      .get(videoId, lang) as { entries: string } | undefined;
     return row ? (JSON.parse(row.entries) as TranscriptEntry[]) : null;
   } catch (error) {
     console.error("transcript cache read failed:", error);
@@ -65,9 +70,11 @@ export async function getTranscript(
   videoId: string,
   lang: string = "ja"
 ): Promise<TranscriptEntry[]> {
-  const cached = readCache(videoId);
+  const cached = readCache(videoId, lang);
   if (cached) return cached;
 
+  // ponytail: 동일 videoId 동시 첫 요청은 둘 다 miss로 yt-dlp를 중복 호출한다.
+  // 실트래픽에서 429가 다시 보이면 in-flight Map<videoId, Promise> coalescer 추가.
   const entries = await fetchTranscript(videoId, lang);
   writeCache(videoId, lang, entries);
   return entries;
