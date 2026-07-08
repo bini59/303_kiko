@@ -1,82 +1,87 @@
+import { execFile } from "child_process";
+import { promisify } from "util";
+import { mkdtemp, readdir, readFile, rm } from "fs/promises";
+import { tmpdir } from "os";
+import { join } from "path";
 import { TranscriptEntry } from "./types";
 
-const INNERTUBE_URL =
-  "https://www.youtube.com/youtubei/v1/player?pretend=true";
+const execFileAsync = promisify(execFile);
 
-const INNERTUBE_CONTEXT = {
-  client: {
-    clientName: "ANDROID",
-    clientVersion: "19.09.37",
-    androidSdkVersion: 30,
-    hl: "ja",
-    gl: "JP",
-  },
-};
+// yt-dlp가 Innertube 변경을 따라가므로 직접 구현보다 안 깨진다.
+const YTDLP = process.env.YTDLP_PATH || "yt-dlp";
 
-interface Json3Event {
-  segs?: { utf8: string }[];
-  tStartMs: number;
-  dDurationMs?: number;
+const SRT_TIME =
+  /(\d{2}):(\d{2}):(\d{2})[,.](\d{3})\s*-->\s*(\d{2}):(\d{2}):(\d{2})[,.](\d{3})/;
+
+/** SRT 블록을 TranscriptEntry[]로 파싱한다. */
+export function parseSrt(srt: string): TranscriptEntry[] {
+  const entries: TranscriptEntry[] = [];
+
+  for (const block of srt.replace(/\r/g, "").trim().split(/\n\n+/)) {
+    const lines = block.split("\n");
+    const timeIdx = lines.findIndex((l) => l.includes("-->"));
+    if (timeIdx === -1) continue;
+
+    const m = lines[timeIdx].match(SRT_TIME);
+    if (!m) continue;
+
+    const start = +m[1] * 3600 + +m[2] * 60 + +m[3] + +m[4] / 1000;
+    const end = +m[5] * 3600 + +m[6] * 60 + +m[7] + +m[8] / 1000;
+
+    const text = lines
+      .slice(timeIdx + 1)
+      .join(" ")
+      .replace(/<[^>]+>/g, "") // vtt→srt 변환 시 남는 인라인 태그 제거
+      .trim();
+    if (!text) continue;
+
+    entries.push({ text, start, duration: Math.max(0, end - start) });
+  }
+
+  return entries;
 }
 
 export async function fetchTranscript(
   videoId: string,
   lang: string = "ja"
 ): Promise<TranscriptEntry[]> {
-  // Step 1: Get caption tracks from Innertube player API
-  const playerRes = await fetch(INNERTUBE_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      context: INNERTUBE_CONTEXT,
-      videoId,
-    }),
-  });
+  const dir = await mkdtemp(join(tmpdir(), "kiko-sub-"));
 
-  if (!playerRes.ok) {
-    throw new Error(`Innertube player API 실패: ${playerRes.status}`);
+  try {
+    await execFileAsync(
+      YTDLP,
+      [
+        "--write-auto-subs",
+        "--write-subs",
+        "--sub-langs",
+        `${lang}.*,${lang}`,
+        "--skip-download",
+        "--convert-subs",
+        "srt",
+        "--no-playlist",
+        "-o",
+        join(dir, "%(id)s.%(ext)s"),
+        "--",
+        `https://www.youtube.com/watch?v=${videoId}`,
+      ],
+      { timeout: 60_000, maxBuffer: 10 * 1024 * 1024 }
+    );
+
+    const srtFile = (await readdir(dir)).find((f) => f.endsWith(".srt"));
+    if (!srtFile) throw new Error("이 영상에는 자막이 없습니다");
+
+    const entries = parseSrt(await readFile(join(dir, srtFile), "utf-8"));
+    if (entries.length === 0) throw new Error("이 영상에는 자막이 없습니다");
+
+    return entries;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      throw new Error("yt-dlp가 설치되어 있지 않습니다");
+    }
+    throw error instanceof Error
+      ? error
+      : new Error("자막을 불러올 수 없습니다");
+  } finally {
+    await rm(dir, { recursive: true, force: true });
   }
-
-  const playerData = await playerRes.json();
-
-  const captionTracks: { baseUrl: string; languageCode: string; kind?: string }[] =
-    playerData?.captions?.playerCaptionsTracklistRenderer?.captionTracks ?? [];
-
-  if (captionTracks.length === 0) {
-    throw new Error("자막 트랙을 찾을 수 없습니다");
-  }
-
-  // Prefer manual lang track > lang auto (asr) track > first track
-  const track =
-    captionTracks.find((t) => t.languageCode === lang && t.kind !== "asr") ??
-    captionTracks.find((t) => t.languageCode === lang) ??
-    captionTracks[0];
-
-  // Step 2: Fetch transcript in json3 format
-  const transcriptUrl = `${track.baseUrl}&fmt=json3`;
-  const transcriptRes = await fetch(transcriptUrl);
-
-  if (!transcriptRes.ok) {
-    throw new Error(`자막 데이터 요청 실패: ${transcriptRes.status}`);
-  }
-
-  const json3 = await transcriptRes.json();
-
-  const events: Json3Event[] = json3?.events ?? [];
-
-  // Parse json3 events into TranscriptEntry[]
-  const entries: TranscriptEntry[] = events
-    .filter((e) => e.segs && e.segs.length > 0)
-    .map((e) => ({
-      text: e.segs!.map((s) => s.utf8).join("").trim(),
-      start: e.tStartMs / 1000,
-      duration: (e.dDurationMs ?? 0) / 1000,
-    }))
-    .filter((e) => e.text.length > 0);
-
-  if (entries.length === 0) {
-    throw new Error("이 영상에는 자막이 없습니다");
-  }
-
-  return entries;
 }
