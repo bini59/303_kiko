@@ -40,34 +40,34 @@ export function ScriptPanel({
       {transcriptError ? (
         <div
           className="font-body text-muted text-center py-10 px-4"
-          role="alert"
+          role="status"
         >
-          <p className="text-accent font-bold mb-1">
-            이 영상은 자막이 없어 학습할 수 없어요
+          <p className="text-accent font-bold mb-1">{transcriptError}</p>
+          <p className="text-sm">
+            다시 시도하거나 자막이 있는 다른 영상을 골라주세요.
           </p>
-          <p className="text-sm">자막 있는 영상을 골라주세요.</p>
         </div>
       ) : (
         <div className="space-y-1">
           {transcript.map((entry, index) => {
-          const isActive = index === activeIndex;
-          return (
-            <button
-              key={`${entry.start}-${index}`}
-              ref={isActive ? activeRef : null}
-              onClick={() => onClickEntry(entry.start)}
-              className={`w-full text-left px-3 py-2 rounded-lg transition-colors font-body text-base cursor-pointer ${
-                isActive
-                  ? "bg-accent/10 border-l-2 border-accent text-accent"
-                  : "hover:bg-chip text-muted"
-              }`}
-            >
-              <span className="text-xs text-muted mr-2 font-body">
-                {formatTime(entry.start)}
-              </span>
-              {entry.text}
-            </button>
-          );
+            const isActive = index === activeIndex;
+            return (
+              <button
+                key={`${entry.start}-${index}`}
+                ref={isActive ? activeRef : null}
+                onClick={() => onClickEntry(entry.start)}
+                className={`w-full text-left px-3 py-2 rounded-lg transition-colors font-body text-base cursor-pointer ${
+                  isActive
+                    ? "bg-accent/10 border-l-2 border-accent text-accent"
+                    : "hover:bg-chip text-muted"
+                }`}
+              >
+                <span className="text-xs text-muted mr-2 font-body">
+                  {formatTime(entry.start)}
+                </span>
+                {entry.text}
+              </button>
+            );
           })}
         </div>
       )}
