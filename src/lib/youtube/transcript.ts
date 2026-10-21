@@ -33,6 +33,21 @@ export function parseJson3(json: { events?: Json3Event[] }): TranscriptEntry[] {
     .filter((e) => e.text.length > 0);
 }
 
+/**
+ * yt-dlp가 내려받은 자막 파일 중 학습 언어 트랙을 고른다.
+ * <lang> 정확 일치 우선, 없으면 <lang>-orig 등 같은 언어 변형.
+ * 다른 언어 트랙으로는 fallback하지 않는다 — 일본어 학습에 영어 자막이 쓰이면 안 된다.
+ */
+export function pickSubtitleFile(
+  files: string[],
+  lang: string
+): string | undefined {
+  return (
+    files.find((f) => f.endsWith(`.${lang}.json3`)) ??
+    files.find((f) => f.includes(`.${lang}-`) && f.endsWith(".json3"))
+  );
+}
+
 export async function fetchTranscript(
   videoId: string,
   lang: string = "ja"
@@ -67,12 +82,8 @@ export async function fetchTranscript(
     });
 
     const files = await readdir(dir);
-    // 원본 언어 트랙(<lang>) 우선, 없으면 <lang>-orig 등, 없으면 아무 json3
-    const pick =
-      files.find((f) => f.endsWith(`.${lang}.json3`)) ??
-      files.find((f) => f.includes(`.${lang}`) && f.endsWith(".json3")) ??
-      files.find((f) => f.endsWith(".json3"));
-    if (!pick) throw new Error("이 영상에는 자막이 없습니다");
+    const pick = pickSubtitleFile(files, lang);
+    if (!pick) throw new Error("이 영상에는 일본어 자막이 없습니다");
 
     const json = JSON.parse(await readFile(join(dir, pick), "utf-8"));
     const entries = parseJson3(json);
