@@ -1,5 +1,29 @@
 import { describe, it, expect } from "vitest";
-import { parseJson3 } from "@/lib/youtube/transcript";
+import { parseJson3, pickSubtitleFile } from "@/lib/youtube/transcript";
+
+describe("pickSubtitleFile", () => {
+  it("prefers the exact language track", () => {
+    expect(
+      pickSubtitleFile(["abc.ja-orig.json3", "abc.ja.json3"], "ja")
+    ).toBe("abc.ja.json3");
+  });
+
+  it("falls back to a variant of the same language (e.g. ja-orig)", () => {
+    expect(pickSubtitleFile(["abc.ja-orig.json3"], "ja")).toBe(
+      "abc.ja-orig.json3"
+    );
+  });
+
+  it("does not fall back to another language when no ja track exists", () => {
+    expect(pickSubtitleFile(["abc.en.json3", "abc.ko.json3"], "ja")).toBe(
+      undefined
+    );
+  });
+
+  it("ignores non-json3 files", () => {
+    expect(pickSubtitleFile(["abc.ja.vtt"], "ja")).toBe(undefined);
+  });
+});
 
 describe("parseJson3", () => {
   it("parses json3 events into transcript entries", () => {
