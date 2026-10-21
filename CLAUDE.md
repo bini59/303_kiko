@@ -27,6 +27,7 @@
 ## 아키텍처
 - LLM: 전략 패턴 (`LLMProvider` 인터페이스 → OpenAI 구현체)
 - YouTube: Data API v3 + 자막 추출
+- 자막 캐시: 추출 성공한 Transcript를 SQLite(`node:sqlite`, Node 22+)에 videoId 키로 저장, 캐시 우선 조회 (`TRANSCRIPT_CACHE_PATH`, 기본 `data/kiko.db`)
 - 자막 동기화: YouTube IFrame API onStateChange + 타임스탬프 매칭
 
 ## 작업 플로우
