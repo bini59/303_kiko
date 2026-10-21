@@ -81,7 +81,7 @@ it('reads gateway base URL and model from server environment', async () => {
   vi.stubEnv('LLM_BASE_URL', 'http://gateway/v1');
   vi.stubEnv('LLM_MODEL', 'configured-model');
   try {
-    mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ choices: [{ message: { content: '{}' } }] }) });
+    mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ choices: [{ message: { content: JSON.stringify({ isCorrect: true, score: 100, correctedTranslation: '테스트', explanation: '' }) } }] }) });
     await new OpenAIProvider({ apiKey: 'env-key' }).verify({ japanese: 'テスト', userTranslation: '테스트' });
     const [url, options] = mockFetch.mock.calls.at(-1)!;
     expect(url).toBe('http://gateway/v1/chat/completions');
@@ -89,4 +89,9 @@ it('reads gateway base URL and model from server environment', async () => {
   } finally {
     vi.unstubAllEnvs();
   }
+});
+
+it.each([null, {}, { isCorrect: true, score: 101, correctedTranslation: '', explanation: '' }, { isCorrect: 'true', score: 50, correctedTranslation: '', explanation: '' }])('rejects malformed provider result %s', async (value) => {
+  mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ choices: [{ message: { content: JSON.stringify(value) } }] }) });
+  await expect(new OpenAIProvider({ apiKey: 'test' }).verify({ japanese: 'a', userTranslation: 'b' })).rejects.toThrow();
 });

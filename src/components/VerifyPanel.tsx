@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { TranscriptEntry } from "@/lib/youtube/types";
-import { VerifyResult } from "@/lib/llm/types";
+import { VerifyResult, isVerifyResult } from "@/lib/llm/types";
 import { saveRecord } from "@/lib/history/storage";
 import { Card } from "./ui/Card";
 import { Button } from "./ui/Button";
@@ -27,7 +27,8 @@ export function VerifyPanel({ videoId, entry }: { videoId: string; entry: Transc
         body: JSON.stringify({ japanese: entry.text, userTranslation }),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "검증에 실패했습니다");
+      if (!response.ok) throw new Error(data?.error || "검증에 실패했습니다");
+      if (!isVerifyResult(data)) throw new Error("검증 응답 형식이 올바르지 않습니다");
       saveRecord({ videoId, entry: { ...entry }, userTranslation, result: data });
       setResult(data);
     } catch (err) {

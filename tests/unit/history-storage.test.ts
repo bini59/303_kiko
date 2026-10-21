@@ -66,3 +66,16 @@ describe("history storage", () => {
     ]);
   });
 });
+
+it('preserves valid records while discarding malformed array entries', () => {
+  localStorage.clear();
+  const valid = saveRecord(input(true));
+  localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify([null, valid, {}, { ...valid, result: null }, { ...valid, entry: { ...valid.entry, start: -1 } }, { ...valid, verifiedAt: 'bad' }]));
+  expect(loadHistory()).toEqual([valid]);
+});
+
+it('rejects invalid results before persisting', () => {
+  localStorage.clear();
+  expect(() => saveRecord({ ...input(true), result: null } as unknown as NewStudyRecord)).toThrow();
+  expect(loadHistory()).toEqual([]);
+});

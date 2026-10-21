@@ -25,3 +25,12 @@ it('shows server errors without saving a record', async () => {
   await waitFor(() => expect(screen.getByRole('alert').textContent).toBe('검증 기능이 설정되지 않았습니다'));
   expect(loadHistory()).toEqual([]);
 });
+
+it.each([null, {}, { isCorrect: 'yes', score: 90 }])('rejects malformed success response %s', async (data) => {
+  vi.spyOn(global, 'fetch').mockResolvedValue({ ok: true, json: async () => data } as Response);
+  render(<VerifyPanel videoId="video-a" entry={{ text: 'こんにちは', start: 12, duration: 3 }} />);
+  fireEvent.change(screen.getByLabelText('내 번역'), { target: { value: '안녕' } });
+  fireEvent.click(screen.getByRole('button', { name: '검증하기' }));
+  await screen.findByRole('alert');
+  expect(loadHistory()).toEqual([]);
+});

@@ -1,5 +1,5 @@
 import { TranscriptEntry } from "@/lib/youtube/types";
-import { VerifyResult } from "@/lib/llm/types";
+import { VerifyResult, isVerifyResult } from "@/lib/llm/types";
 
 // 학습 기록(Study Record): Translation Verification 1회의 결과를 localStorage에 축적한다.
 // 계정/서버 저장으로 승격할 때 이 구조를 그대로 옮길 수 있도록 평탄한 JSON으로 유지.
@@ -28,7 +28,7 @@ export function loadHistory(storage: Storage | null = getStorage()): StudyRecord
   if (!storage) return [];
   try {
     const parsed = JSON.parse(storage.getItem(HISTORY_STORAGE_KEY) ?? "[]");
-    return Array.isArray(parsed) ? parsed : [];
+    return Array.isArray(parsed) ? parsed.filter(isStudyRecord) : [];
   } catch {
     return []; // 손상된 데이터는 무시하고 빈 기록으로 시작
   }
@@ -44,6 +44,7 @@ export function saveRecord(
     id: `${now.getTime()}-${Math.random().toString(36).slice(2, 8)}`,
     verifiedAt: now.toISOString(),
   };
+  if (!isStudyRecord(record)) throw new Error("학습 기록 형식이 올바르지 않습니다");
   if (!storage) return record;
   try {
     storage.setItem(
@@ -64,4 +65,17 @@ export function sortForReview(records: StudyRecord[]): StudyRecord[] {
     }
     return b.verifiedAt.localeCompare(a.verifiedAt);
   });
+}
+
+function isStudyRecord(value: unknown): value is StudyRecord {
+  if (!value || typeof value !== "object") return false;
+  const record = value as StudyRecord;
+  return typeof record.id === "string" && !!record.id.trim() &&
+    typeof record.videoId === "string" && !!record.videoId.trim() &&
+    typeof record.userTranslation === "string" && !!record.userTranslation.trim() &&
+    typeof record.verifiedAt === "string" && /^\d{4}-\d{2}-\d{2}T/.test(record.verifiedAt) && Number.isFinite(Date.parse(record.verifiedAt)) &&
+    !!record.entry && typeof record.entry.text === "string" &&
+    Number.isFinite(record.entry.start) && record.entry.start >= 0 &&
+    Number.isFinite(record.entry.duration) && record.entry.duration >= 0 &&
+    isVerifyResult(record.result);
 }

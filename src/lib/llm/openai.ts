@@ -1,4 +1,4 @@
-import { LLMProvider, LLMProviderOptions, VerifyRequest, VerifyResult } from "./types";
+import { LLMProvider, LLMProviderOptions, VerifyRequest, VerifyResult, isVerifyResult } from "./types";
 
 export class OpenAIProvider implements LLMProvider {
   readonly name = "openai";
@@ -28,6 +28,7 @@ export class OpenAIProvider implements LLMProvider {
 
     const response = await fetch(`${this.baseUrl}/chat/completions`, {
       method: "POST",
+      signal: AbortSignal.timeout(30_000),
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${this.apiKey}`,
@@ -43,6 +44,7 @@ export class OpenAIProvider implements LLMProvider {
           { role: "user", content: prompt },
         ],
         temperature: 0.3,
+        max_tokens: 1000,
       }),
     });
 
@@ -57,6 +59,8 @@ export class OpenAIProvider implements LLMProvider {
     const content = data.choices[0].message.content;
 
     const json = content.trim().replace(/^```(?:json)?\s*\n?([\s\S]*?)\n?```$/i, "$1");
-    return JSON.parse(json.trim()) as VerifyResult;
+    const result: unknown = JSON.parse(json.trim());
+    if (!isVerifyResult(result)) throw new Error("검증 응답 형식이 올바르지 않습니다");
+    return result;
   }
 }
