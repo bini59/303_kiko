@@ -65,3 +65,33 @@ describe('OpenAIProvider', () => {
     ).rejects.toThrow('OpenAI API 오류: Rate limit exceeded')
   })
 })
+
+it('uses gateway configuration and parses fenced JSON', async () => {
+  const result = { isCorrect: true, score: 100, correctedTranslation: '테스트', explanation: '정확함' }
+  mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ choices: [{ message: { content: '```json\n' + JSON.stringify(result) + '\n```' } }] }) })
+  const gateway = new OpenAIProvider({ apiKey: 'gateway-key', baseUrl: 'http://omniroute:20128/v1/', model: 'gateway-model' })
+  expect(await gateway.verify({ japanese: 'テスト', userTranslation: '테스트' })).toEqual(result)
+  const [url, options] = mockFetch.mock.calls.at(-1)!
+  expect(url).toBe('http://omniroute:20128/v1/chat/completions')
+  expect(JSON.parse(options.body).model).toBe('gateway-model')
+  expect(options.headers.Authorization).toBe('Bearer gateway-key')
+})
+
+it('reads gateway base URL and model from server environment', async () => {
+  vi.stubEnv('LLM_BASE_URL', 'http://gateway/v1');
+  vi.stubEnv('LLM_MODEL', 'configured-model');
+  try {
+    mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ choices: [{ message: { content: JSON.stringify({ isCorrect: true, score: 100, correctedTranslation: '테스트', explanation: '' }) } }] }) });
+    await new OpenAIProvider({ apiKey: 'env-key' }).verify({ japanese: 'テスト', userTranslation: '테스트' });
+    const [url, options] = mockFetch.mock.calls.at(-1)!;
+    expect(url).toBe('http://gateway/v1/chat/completions');
+    expect(JSON.parse(options.body).model).toBe('configured-model');
+  } finally {
+    vi.unstubAllEnvs();
+  }
+});
+
+it.each([null, {}, { isCorrect: true, score: 101, correctedTranslation: '', explanation: '' }, { isCorrect: 'true', score: 50, correctedTranslation: '', explanation: '' }])('rejects malformed provider result %s', async (value) => {
+  mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ choices: [{ message: { content: JSON.stringify(value) } }] }) });
+  await expect(new OpenAIProvider({ apiKey: 'test' }).verify({ japanese: 'a', userTranslation: 'b' })).rejects.toThrow();
+});

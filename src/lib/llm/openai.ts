@@ -1,11 +1,15 @@
-import { LLMProvider, LLMProviderOptions, VerifyRequest, VerifyResult } from "./types";
+import { LLMProvider, LLMProviderOptions, VerifyRequest, VerifyResult, isVerifyResult } from "./types";
 
 export class OpenAIProvider implements LLMProvider {
   readonly name = "openai";
   private readonly apiKey: string;
+  private readonly baseUrl: string;
+  private readonly model: string;
 
   constructor(options: LLMProviderOptions) {
     this.apiKey = options.apiKey;
+    this.baseUrl = (options.baseUrl || process.env.LLM_BASE_URL || "https://api.openai.com/v1").replace(/\/+$/, "");
+    this.model = options.model || process.env.LLM_MODEL || "gpt-4o-mini";
   }
 
   async verify(request: VerifyRequest): Promise<VerifyResult> {
@@ -22,14 +26,15 @@ export class OpenAIProvider implements LLMProvider {
   "explanation": "번역 평가 설명"
 }`;
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    const response = await fetch(`${this.baseUrl}/chat/completions`, {
       method: "POST",
+      signal: AbortSignal.timeout(30_000),
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${this.apiKey}`,
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model: this.model,
         messages: [
           {
             role: "system",
@@ -39,6 +44,7 @@ export class OpenAIProvider implements LLMProvider {
           { role: "user", content: prompt },
         ],
         temperature: 0.3,
+        max_tokens: 1000,
       }),
     });
 
@@ -52,6 +58,9 @@ export class OpenAIProvider implements LLMProvider {
     const data = await response.json();
     const content = data.choices[0].message.content;
 
-    return JSON.parse(content) as VerifyResult;
+    const json = content.trim().replace(/^```(?:json)?\s*\n?([\s\S]*?)\n?```$/i, "$1");
+    const result: unknown = JSON.parse(json.trim());
+    if (!isVerifyResult(result)) throw new Error("검증 응답 형식이 올바르지 않습니다");
+    return result;
   }
 }

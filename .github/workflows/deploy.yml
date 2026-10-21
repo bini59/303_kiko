@@ -14,16 +14,22 @@ jobs:
 
       - name: Create .env.production
         env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_BASE_URL: ${{ vars.LLM_BASE_URL || secrets.LLM_BASE_URL || 'http://omniroute:20128/v1' }}
+          LLM_MODEL: ${{ vars.LLM_MODEL || secrets.LLM_MODEL || 'gpt-4o-mini' }}
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
           WIREGUARD_PRIVATE_KEY: ${{ secrets.WIREGUARD_PRIVATE_KEY }}
         run: |
           {
+            echo "LLM_API_KEY=${LLM_API_KEY}"
+            echo "LLM_BASE_URL=${LLM_BASE_URL}"
+            echo "LLM_MODEL=${LLM_MODEL}"
             echo "YOUTUBE_API_KEY=${YOUTUBE_API_KEY}"
             echo "WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}"
           } > .env.production
 
       - name: Deploy
-        run: docker compose up -d --build
+        run: docker compose --env-file .env.production up -d --build
 
       - name: Verify deployment
         run: |
