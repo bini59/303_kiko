@@ -4,19 +4,20 @@ import { createLLMProvider } from "@/lib/llm/factory";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { japanese, userTranslation, apiKey } = body;
+    const { japanese, userTranslation } = body;
+    const apiKey = process.env.LLM_API_KEY;
 
-    if (!japanese || !userTranslation) {
+    if (typeof japanese !== "string" || !japanese.trim() || typeof userTranslation !== "string" || !userTranslation.trim()) {
       return NextResponse.json(
         { error: "japanese와 userTranslation 필드가 필요합니다" },
         { status: 400 }
       );
     }
 
-    if (!apiKey) {
+    if (!apiKey?.trim()) {
       return NextResponse.json(
-        { error: "OpenAI API Key가 필요합니다" },
-        { status: 400 }
+        { error: "검증 기능이 설정되지 않았습니다" },
+        { status: 503 }
       );
     }
 

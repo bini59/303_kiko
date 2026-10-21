@@ -17,7 +17,7 @@
 
 ## API 키
 - YouTube Data API v3: `.env.local` → `YOUTUBE_API_KEY`
-- OpenAI: `.env.local` → `OPENAI_API_KEY`
+- Translation Verification: 서버 전용 `LLM_API_KEY`, `LLM_BASE_URL`(기본 OpenAI v1), `LLM_MODEL`(기본 gpt-4o-mini). 운영 Compose는 OmniRoute 사용.
 
 ## 디자인 시스템
 - `.claude/STYLE.md` 참조
@@ -53,6 +53,11 @@
 - [x] Phase 4: 영상 플레이어 & 자막 동기화
 - [x] Phase 5: LLM 번역 검증
 - [x] Phase 6: 통합 & E2E
+
+## #25 학습 기록
+- 검증 결과를 localStorage에 누적하고 학습 기록 화면에서 오답 우선 조회.
+- LearnView에서 클릭한 자막을 번역 검증하며 키 입력 UI 없이 서버 게이트웨이 사용.
+- `LLM_API_KEY` 미설정 시 503. 실제 LLM 호출은 테스트에서 mock 처리.
 
 ## 테스트 현황
 - 단위/통합 테스트: 11개 파일, 59 테스트

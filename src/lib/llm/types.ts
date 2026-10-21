@@ -12,6 +12,8 @@ export interface VerifyResult {
 
 export interface LLMProviderOptions {
   apiKey: string;
+  baseUrl?: string;
+  model?: string;
 }
 
 export interface LLMProvider {

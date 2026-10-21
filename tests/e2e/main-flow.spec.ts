@@ -101,3 +101,21 @@ test.describe('Main Flow', () => {
     await expect(page.getByRole('status')).toContainText('자막 추출 실패: YouTube IP blocked')
   })
 })
+
+test('verification persists after reload and history opens from landing', async ({ page }) => {
+  await page.route('/api/youtube*', route => route.fulfill({ json: mockYoutubeResponse }));
+  await page.route('/api/verify', route => route.fulfill({ json: {
+    isCorrect: false, score: 40, correctedTranslation: '안녕하세요', explanation: '인사입니다',
+  } }));
+  await page.goto('/');
+  await page.getByPlaceholder(/YouTube URL/i).fill('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+  await page.getByRole('button', { name: /학습 시작/i }).click();
+  await page.getByLabel('내 번역').fill('안녕');
+  await page.getByRole('button', { name: '검증하기' }).click();
+  await expect(page.getByRole('status')).toContainText('오답 · 40점');
+  await page.getByRole('button', { name: '학습 기록' }).click();
+  await expect(page.getByText('내 번역: 안녕', { exact: true })).toBeVisible();
+  await page.reload();
+  await page.getByRole('button', { name: '학습 기록' }).click();
+  await expect(page.getByText('내 번역: 안녕', { exact: true })).toBeVisible();
+});

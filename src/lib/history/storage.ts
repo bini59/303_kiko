@@ -17,7 +17,11 @@ export type NewStudyRecord = Omit<StudyRecord, "id" | "verifiedAt">;
 export const HISTORY_STORAGE_KEY = "kiko_study_history_v1";
 
 function getStorage(): Storage | null {
-  return typeof window === "undefined" ? null : window.localStorage;
+  try {
+    return typeof window === "undefined" ? null : window.localStorage;
+  } catch {
+    return null;
+  }
 }
 
 export function loadHistory(storage: Storage | null = getStorage()): StudyRecord[] {

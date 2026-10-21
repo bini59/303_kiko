@@ -13,11 +13,13 @@ vi.mock('@/lib/llm/factory', () => ({
   })),
 }))
 
+import { createLLMProvider } from '@/lib/llm/factory'
 import { POST } from '@/app/api/verify/route'
 
 describe('POST /api/verify', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.stubEnv('LLM_API_KEY', 'server-key')
   })
 
   it('returns verification result for valid request', async () => {
@@ -26,7 +28,7 @@ describe('POST /api/verify', () => {
       body: JSON.stringify({
         japanese: 'こんにちは',
         userTranslation: '안녕하세요',
-        apiKey: 'test-key',
+        apiKey: 'ignored-client-key',
       }),
     })
 
@@ -36,6 +38,7 @@ describe('POST /api/verify', () => {
     expect(response.status).toBe(200)
     expect(data.isCorrect).toBe(true)
     expect(data.score).toBe(95)
+    expect(createLLMProvider).toHaveBeenCalledWith('openai', expect.objectContaining({ apiKey: 'server-key' }))
   })
 
   it('returns 400 for missing fields', async () => {
@@ -48,18 +51,21 @@ describe('POST /api/verify', () => {
     expect(response.status).toBe(400)
   })
 
-  it('returns 400 for missing apiKey', async () => {
+  it('returns 503 when server key is missing', async () => {
+    vi.stubEnv('LLM_API_KEY', '')
     const request = new NextRequest('http://localhost:3000/api/verify', {
       method: 'POST',
       body: JSON.stringify({
         japanese: 'こんにちは',
         userTranslation: '안녕하세요',
+        apiKey: 'cannot-enable-server',
       }),
     })
 
     const response = await POST(request)
-    expect(response.status).toBe(400)
+    expect(response.status).toBe(503)
+    expect(createLLMProvider).not.toHaveBeenCalled()
     const data = await response.json()
-    expect(data.error).toContain('API Key')
+    expect(data.error).toBe('검증 기능이 설정되지 않았습니다')
   })
 })

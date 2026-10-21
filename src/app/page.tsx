@@ -1,5 +1,7 @@
 "use client";
 
+import { HistoryView } from "@/components/HistoryView";
+import { loadHistory, StudyRecord } from "@/lib/history/storage";
 import { useState } from "react";
 import { Landing } from "@/components/Landing";
 import { LearnView } from "@/components/LearnView";
@@ -8,6 +10,7 @@ import { useTranscriptSync } from "@/hooks/useTranscriptSync";
 import { VideoInfo, TranscriptEntry } from "@/lib/youtube/types";
 
 export default function Home() {
+  const [history, setHistory] = useState<StudyRecord[] | null>(null);
   const [videoId, setVideoId] = useState("");
   const [videoInfo, setVideoInfo] = useState<VideoInfo | null>(null);
   const [transcript, setTranscript] = useState<TranscriptEntry[]>([]);
@@ -55,24 +58,38 @@ export default function Home() {
     setError("");
   };
 
-  if (!videoId) {
-    return <Landing onSubmit={handleSubmit} loading={loading} error={error} />;
-  }
-
   return (
-    <LearnView
-      videoInfo={videoInfo}
-      transcript={transcript}
-      activeIndex={activeIndex}
-      currentTime={currentTime}
-      duration={duration}
-      isPlaying={isPlaying}
-      playerRef={playerRef}
-      onSeek={seekTo}
-      onPlay={play}
-      onPause={pause}
-      onBack={handleBack}
-      transcriptError={transcriptError}
-    />
+    <>
+      {history && <HistoryView records={history} onBack={() => setHistory(null)} />}
+      <div hidden={history !== null}>
+        <nav className="px-4 pt-4">
+          <button
+            className="font-semibold text-accent min-h-12"
+            onClick={() => { if (isPlaying) pause(); setHistory(loadHistory()); }}
+          >
+            학습 기록
+          </button>
+        </nav>
+        {!videoId ? (
+          <Landing onSubmit={handleSubmit} loading={loading} error={error} />
+        ) : (
+          <LearnView
+            videoId={videoId}
+            videoInfo={videoInfo}
+            transcript={transcript}
+            activeIndex={activeIndex}
+            currentTime={currentTime}
+            duration={duration}
+            isPlaying={isPlaying}
+            playerRef={playerRef}
+            onSeek={seekTo}
+            onPlay={play}
+            onPause={pause}
+            onBack={handleBack}
+            transcriptError={transcriptError}
+          />
+        )}
+      </div>
+    </>
   );
 }

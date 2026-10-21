@@ -31,6 +31,7 @@ services:
     env_file:
       - .env.production
     environment:
+      LLM_BASE_URL: "${LLM_BASE_URL:-http://omniroute:20128/v1}"
       YTDLP_PROXY: "http://kiko-gluetun:8888"
     volumes:
       # 자막 캐시(SQLite) 영속화

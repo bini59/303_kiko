@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { VerifyPanel } from "./VerifyPanel";
 import { ArrowLeft } from "lucide-react";
 import { Card } from "./ui/Card";
 import { VideoPlayer } from "./VideoPlayer";
@@ -8,6 +10,7 @@ import { PlaybackControls } from "./PlaybackControls";
 import { VideoInfo, TranscriptEntry } from "@/lib/youtube/types";
 
 interface LearnViewProps {
+  videoId: string;
   videoInfo: VideoInfo | null;
   transcript: TranscriptEntry[];
   activeIndex: number;
@@ -23,6 +26,7 @@ interface LearnViewProps {
 }
 
 export function LearnView({
+  videoId,
   videoInfo,
   transcript,
   activeIndex,
@@ -36,6 +40,7 @@ export function LearnView({
   onBack,
   transcriptError,
 }: LearnViewProps) {
+  const [selectedIndex, setSelectedIndex] = useState(0);
   return (
     <main className="min-h-screen flex flex-col md:flex-row gap-4 p-4 md:p-6">
       {/* 좌 사이드바: 플레이어 + 영상 정보. */}
@@ -60,6 +65,9 @@ export function LearnView({
             </p>
           </Card>
         )}
+        {transcript[selectedIndex] && (
+          <VerifyPanel key={`${videoId}:${selectedIndex}`} videoId={videoId} entry={transcript[selectedIndex]} />
+        )}
       </aside>
 
       {/* 중앙 메인: 자막(클릭=seek) + 재생 컨트롤. */}
@@ -68,7 +76,10 @@ export function LearnView({
           <ScriptPanel
             transcript={transcript}
             activeIndex={activeIndex}
-            onClickEntry={onSeek}
+            onClickEntry={(time) => {
+              setSelectedIndex(transcript.findIndex((entry) => entry.start === time));
+              onSeek(time);
+            }}
             transcriptError={transcriptError}
           />
         </div>
