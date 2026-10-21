@@ -1,5 +1,6 @@
 # Stage 1: Base
-FROM node:20-slim AS base
+# Node 22+: 자막 캐시가 내장 node:sqlite를 쓴다
+FROM node:22-slim AS base
 RUN corepack enable && corepack prepare pnpm@10.7.1 --activate
 
 # Stage 2: Dependencies
@@ -16,11 +17,13 @@ COPY . .
 RUN pnpm build
 
 # Stage 4: Runner
-FROM node:20-slim AS runner
+FROM node:22-slim AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+# 자막 캐시 SQLite 파일. docker-compose에서 /app/data를 볼륨으로 마운트해 영속화한다.
+ENV TRANSCRIPT_CACHE_PATH=/app/data/kiko.db
 
 # yt-dlp standalone 바이너리 (Python 불필요, Innertube 변경을 따라가 안 깨짐)
 # 아키텍처별 릴리즈 자산을 선택 (러너는 aarch64)
@@ -36,7 +39,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
     && rm -rf /var/lib/apt/lists/*
 
 RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 nextjs
+    adduser --system --uid 1001 nextjs && \
+    mkdir -p /app/data && chown nextjs:nodejs /app/data
 
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static

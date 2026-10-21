@@ -6,16 +6,16 @@ vi.mock('@/lib/youtube/client', () => ({
   fetchVideoInfo: vi.fn(),
 }))
 
-vi.mock('@/lib/youtube/transcript', () => ({
-  fetchTranscript: vi.fn(),
+vi.mock('@/lib/youtube/transcript-cache', () => ({
+  getTranscript: vi.fn(),
 }))
 
 import { GET } from '@/app/api/youtube/route'
 import { fetchVideoInfo } from '@/lib/youtube/client'
-import { fetchTranscript } from '@/lib/youtube/transcript'
+import { getTranscript } from '@/lib/youtube/transcript-cache'
 
 const mockFetchVideoInfo = vi.mocked(fetchVideoInfo)
-const mockFetchTranscript = vi.mocked(fetchTranscript)
+const mockFetchTranscript = vi.mocked(getTranscript)
 
 describe('GET /api/youtube', () => {
   beforeEach(() => {

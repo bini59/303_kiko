@@ -44,3 +44,6 @@ next-env.d.ts
 # claude tooling (local artifacts)
 graphify-out/
 tmp/
+
+# 자막 캐시 SQLite (로컬 dev)
+/data/
