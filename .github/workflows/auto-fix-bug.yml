@@ -7,7 +7,7 @@ on:
 jobs:
   fix-bug:
     if: github.event.label.name == 'bug'
-    runs-on: [self-hosted, kiko]
+    runs-on: ubuntu-24.04-arm
 
     permissions:
       contents: write
@@ -24,6 +24,18 @@ jobs:
         with:
           ref: main
           token: ${{ secrets.PAT_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install pnpm and Claude Code
+        run: |
+          corepack enable && corepack prepare pnpm@10.7.1 --activate
+          pnpm install --frozen-lockfile
+          npm i -g @anthropic-ai/claude-code
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
       - name: Get issue details
         id: issue
